@@ -22,7 +22,7 @@ import java.util.List;
  * @date 2020-10-16
  */
 @Slf4j
-@HandlerChain(value = "weatherHandler", cmds = {"CMD:weather", "weather", "播报天气", "开启天气预报", "T:取消天气预报", "TQ:"})
+@HandlerChain(value = "weatherHandler", cmds = {"help:weather", "weather", "播报天气", "开启天气预报", "T:取消天气预报", "TQ:"})
 public class WeatherHandler implements TaskHandler {
 
     private final IWeatherService weatherService;
@@ -33,7 +33,7 @@ public class WeatherHandler implements TaskHandler {
     }
 
     private static final String CMD_WEATHER_OPEN = "开启天气预报";
-    private static final String CMD_WEATHER_TIPS = "CMD:weather";
+    private static final String CMD_WEATHER_TIPS = "help:weather";
     private static final String CMD_WEATHER_CLOSE = "T:取消天气预报";
     private static final String CMD_WEATHER_CITY_PREFIX = "TQ:";
     private static final String CMD_WEATHER_CITY_ADD = "TQ:ADD:";
@@ -52,7 +52,7 @@ public class WeatherHandler implements TaskHandler {
                     "添加关注城市: [TQ:ADD:XXX,XXX]",
                     "删除关注城市: [TQ:DEL:XXX,XXX]",
                     "播报天气: [播报天气 OR weather]",
-                    "展示天气相关命令: [CMD:weather]"
+                    "展示天气相关命令: [help:weather]"
             ));
         } else if (CMD_WEATHER_CLOSE.equals(msg)) {
             handleWeatherClose(event, gId);

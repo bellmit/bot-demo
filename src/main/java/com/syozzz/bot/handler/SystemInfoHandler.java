@@ -9,7 +9,7 @@ import net.mamoe.mirai.message.GroupMessageEvent;
  * @version 1.0
  * @date 2020-10-15
  */
-@HandlerChain(value = "infoHandler", cmds = {"appInfo", "系统信息"})
+@HandlerChain(value = "sysInfoHandler", cmds = {"appInfo", "系统信息"})
 public class SystemInfoHandler implements TaskHandler {
 
 
