@@ -25,6 +25,7 @@ public class InfoHandler implements TaskHandler {
     private static final String CMD_SAVE_DEL = "INFO:DEL:";
     private static final String CMD_SAVE_SHOW = "INFO:SHOW";
     private static final String CMD_SAVE_ONE = "I:";
+    private static final String KEY_ALL = "ALL";
 
     private final IInfoService infoService;
 
@@ -41,7 +42,21 @@ public class InfoHandler implements TaskHandler {
             handleInfoShow(event.getGroup());
         }  else if (msg.startsWith(CMD_SAVE_ONE)) {
             handleInfoOne(msg, event.getGroup());
+        } else if (msg.startsWith(CMD_SAVE_DEL)) {
+            handleInfoDel(msg, event.getGroup());
         }
+    }
+
+    private void handleInfoDel(String msg, Group group) {
+        String key = StrUtil.subAfter(msg, ":", true);
+        if (KEY_ALL.equals(key)) {
+            infoService.clearGroupInfos(group.getId());
+            group.sendMessage("已清空所有记录信息");
+            return;
+        }
+        Long id = Long.valueOf(key);
+        infoService.deleteById(id);
+        group.sendMessage("成功删除信息");
     }
 
     private void handleInfoOne(String msg, Group group) {

@@ -42,3 +42,7 @@ build/
 ### VS Code ###
 .vscode/
 *.log
+.DS_Store
+http.log.1
+http.log.1
+http.log.1

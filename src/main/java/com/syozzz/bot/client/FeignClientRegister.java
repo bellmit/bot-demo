@@ -17,7 +17,6 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 
 /**
  * Feign 服务注册
@@ -31,6 +30,8 @@ public class FeignClientRegister implements BeanFactoryPostProcessor {
 
     private static final String SCAN_PATH = "com.syozzz.bot.client";
 
+    private static final String API_CLASS_NAME = "com.syozzz.bot.annotation.FeignApi";
+
 
     @Override
     public void postProcessBeanFactory(@NotNull ConfigurableListableBeanFactory beanFactory) {
@@ -40,6 +41,7 @@ public class FeignClientRegister implements BeanFactoryPostProcessor {
         }
         log.info("加载 Feign client, total:{}", feignClassInfo.size());
         feignClassInfo.forEach(classInfo -> {
+            log.info("注入 Feign Client:{}", classInfo);
             Feign.Builder builder = Feign.builder()
                     .encoder(new JacksonEncoder())
                     .decoder(new JacksonDecoder())
@@ -55,12 +57,11 @@ public class FeignClientRegister implements BeanFactoryPostProcessor {
     }
 
     private ClassInfoList scan() {
-        try(ScanResult scanResult = new ClassGraph().enableAllInfo().whitelistPackages(SCAN_PATH).scan()){
-            return scanResult.getAllClasses()
-                    .filter(classInfo -> classInfo.hasAnnotation("com.syozzz.bot.annotation.FeignApi"));
-        } catch (IOException e) {
-            log.error("扫描 Feign client 异常", e);
-        }
-        return null;
+        ScanResult scanResult = new ClassGraph()
+                .overrideClassLoaders(Thread.currentThread().getContextClassLoader())
+                .enableAllInfo().acceptPackages(SCAN_PATH).scan();
+        return scanResult.getAllClasses()
+                .filter(classInfo -> classInfo.hasAnnotation(API_CLASS_NAME));
     }
+
 }

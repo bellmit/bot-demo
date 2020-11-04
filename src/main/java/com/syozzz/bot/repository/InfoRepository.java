@@ -22,7 +22,7 @@ public interface InfoRepository extends JpaRepository<Info, Long> {
     List<Info> findAllByGroupIdIs(Long groupId);
 
     /**
-     * 删除组内所有嘻嘻
+     * 删除组内所有信息
      * @param groupId 群ID
      */
     void deleteAllByGroupIdIs(Long groupId);

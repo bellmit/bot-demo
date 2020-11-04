@@ -6,9 +6,13 @@ import com.syozzz.bot.annotation.HandlerChain;
 import com.syozzz.bot.service.IWeatherService;
 import com.syozzz.bot.util.MessageUtil;
 import lombok.extern.slf4j.Slf4j;
+import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.message.GroupMessageEvent;
+import net.mamoe.mirai.message.data.AtAll;
+import net.mamoe.mirai.message.data.MessageUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,9 +31,12 @@ public class WeatherHandler implements TaskHandler {
 
     private final IWeatherService weatherService;
 
+    private final TaskDispatcher taskDispatcher;
+
     @Autowired
-    public WeatherHandler(IWeatherService weatherService) {
+    public WeatherHandler(IWeatherService weatherService, TaskDispatcher taskDispatcher) {
         this.weatherService = weatherService;
+        this.taskDispatcher = taskDispatcher;
     }
 
     private static final String CMD_WEATHER_OPEN = "开启天气预报";
@@ -131,6 +138,35 @@ public class WeatherHandler implements TaskHandler {
             }
         }
         return allCity;
+    }
+
+    @Scheduled(cron = "0 0 23 * * ?")
+    private void sleepNotify() {
+        Collection<Long> groups = weatherService.getAllRegisterGroups();
+        groups.forEach(group -> {
+            taskDispatcher
+                    .getBot()
+                    .getGroup(group)
+                    .sendMessage(
+                            MessageUtils.newChain("该睡觉了, 憨批们, 自觉点")
+                                    .plus(AtAll.INSTANCE));
+        });
+    }
+
+    @Scheduled(cron = "0 0 7 * * ?")
+    private void morningNotify() {
+        Collection<Long> groups = weatherService.getAllRegisterGroups();
+        groups.forEach(gid -> {
+            Group group = taskDispatcher.getBot().getGroup(gid);
+            group.sendMessage(
+                            MessageUtils.newChain("早安, 打工人~ 该起来搬钻了")
+                                    .plus(AtAll.INSTANCE));
+            Collection<Long> citys = weatherService.getAllCitysOfGroup(gid);
+            if (!citys.isEmpty()) {
+                List<String> infos = weatherService.getWeatherInfoByGroup(gid);
+                MessageUtil.sendMultiMsg(group, infos);
+            }
+        });
     }
 
 }
