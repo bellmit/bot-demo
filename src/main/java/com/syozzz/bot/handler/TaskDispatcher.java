@@ -1,7 +1,6 @@
 package com.syozzz.bot.handler;
 
 import com.syozzz.bot.annotation.HandlerChain;
-import com.syozzz.bot.handler.TaskHandler;
 import com.syozzz.bot.util.MessageUtil;
 import kotlin.coroutines.CoroutineContext;
 import net.mamoe.mirai.Bot;
@@ -11,6 +10,9 @@ import net.mamoe.mirai.event.Events;
 import net.mamoe.mirai.event.ListeningStatus;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.message.GroupMessageEvent;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.SingleMessage;
 import net.mamoe.mirai.utils.BotConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Bot 任务分发
@@ -38,6 +38,8 @@ public class TaskDispatcher {
     @Autowired
     private List<TaskHandler> handlers;
     private Map<String[], TaskHandler> cache;
+    @Autowired
+    private TulingHandler tulingHandler;
 
     private Bot bot;
 
@@ -70,6 +72,10 @@ public class TaskDispatcher {
             @EventHandler
             public ListeningStatus onGroupMessage(GroupMessageEvent event) {
                 String msgString = MessageUtil.msgToString(event.getMessage());
+                if (isAtBot(event)) {
+                    tulingHandler.handle(msgString, event);
+                    return ListeningStatus.LISTENING;
+                }
                 cache.forEach((strings, taskHandler) -> {
                     if (contains(strings, msgString)) {
                         taskHandler.handle(msgString, event);
@@ -88,6 +94,21 @@ public class TaskDispatcher {
                     }
                 }
                 return result;
+            }
+
+            private boolean isAtBot(GroupMessageEvent event) {
+                MessageChain chain = event.getMessage();
+                Set<Long> allTarget = new HashSet<>();
+                for (int i = 0; i < chain.size(); i++) {
+                    SingleMessage singleMessage = chain.get(i);
+                    if (singleMessage instanceof At) {
+                        At at = (At) singleMessage;
+                        if (at.getTarget() == user) {
+                            allTarget.add(at.getTarget());
+                        }
+                    }
+                }
+                return allTarget.size() == 1 && allTarget.contains(user);
             }
 
             @Override

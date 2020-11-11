@@ -142,31 +142,45 @@ public class WeatherHandler implements TaskHandler {
 
     @Scheduled(cron = "0 0 23 * * ?")
     private void sleepNotify() {
+        log.info("执行晚安提醒...");
         Collection<Long> groups = weatherService.getAllRegisterGroups();
-        groups.forEach(group -> {
+        for (Object g : groups) {
+            long group = 0L;
+            if (g instanceof Long) {
+                group = (Long) g;
+            } else if (g instanceof Integer) {
+                group = ((Integer) g).longValue();
+            }
             taskDispatcher
                     .getBot()
                     .getGroup(group)
                     .sendMessage(
                             MessageUtils.newChain("该睡觉了, 憨批们, 自觉点")
                                     .plus(AtAll.INSTANCE));
-        });
+        }
     }
 
     @Scheduled(cron = "0 0 7 * * ?")
     private void morningNotify() {
+        log.info("执行起床提醒...");
         Collection<Long> groups = weatherService.getAllRegisterGroups();
-        groups.forEach(gid -> {
+        for (Object g : groups) {
+            long gid = 0L;
+            if (g instanceof Long) {
+                gid = (Long) g;
+            } else if (g instanceof Integer) {
+                gid = ((Integer) g).longValue();
+            }
             Group group = taskDispatcher.getBot().getGroup(gid);
             group.sendMessage(
-                            MessageUtils.newChain("早安, 打工人~ 该起来搬钻了")
-                                    .plus(AtAll.INSTANCE));
+                    MessageUtils.newChain("早安, 打工人~ 该起来搬砖了")
+                            .plus(AtAll.INSTANCE));
             Collection<Long> citys = weatherService.getAllCitysOfGroup(gid);
             if (!citys.isEmpty()) {
                 List<String> infos = weatherService.getWeatherInfoByGroup(gid);
                 MessageUtil.sendMultiMsg(group, infos);
             }
-        });
+        }
     }
 
 }

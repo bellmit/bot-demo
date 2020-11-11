@@ -6,12 +6,14 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -30,14 +32,13 @@ public class RedisConfiguration extends CachingConfigurerSupport {
      * @return Serializer
      */
     @Bean
-    public Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer(){
-        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
+    public GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer(){
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
-        serializer.setObjectMapper(objectMapper);
-        return serializer;
+        return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 
     /**
@@ -48,7 +49,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
      */
     @Bean
     @SuppressWarnings({"unchecked","rawtypes"})
-    public RedisTemplate redisTemplate(RedisConnectionFactory connectionFactory, Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer) {
+    public RedisTemplate redisTemplate(RedisConnectionFactory connectionFactory, GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer) {
         RedisTemplate template = new RedisTemplate();
         template.setConnectionFactory(connectionFactory);
         template.setValueSerializer(jackson2JsonRedisSerializer);

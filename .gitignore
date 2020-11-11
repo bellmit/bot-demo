@@ -47,3 +47,7 @@ http.log.1
 http.log.1
 http.log.1
 *.1
+*.lck
+*.lck
+*.2
+*.lck
